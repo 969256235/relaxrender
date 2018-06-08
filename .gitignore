@@ -26,3 +26,4 @@ build
 .pytest_cache/
 htmlcov/
 output_points.jpg
+docs/_build/*
