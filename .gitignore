@@ -27,3 +27,4 @@ build
 htmlcov/
 output_points.jpg
 docs/_build/*
+.vscode/*
