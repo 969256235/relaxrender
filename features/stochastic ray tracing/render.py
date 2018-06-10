@@ -15,7 +15,7 @@ class TestRelaxRender(unittest.TestCase):
         scene = example.cornell_box
         
         myContext = ctx.Context()
-        myContext.raycasting_iteration = int(2e5)
+        myContext.raycasting_iteration = int(1e6)
         render = raycasting.SimpleReverseRayCasting(myContext)
         input_xy, output_color = render.drive_raycasting(scene)
         

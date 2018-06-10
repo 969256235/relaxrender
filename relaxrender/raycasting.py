@@ -4,7 +4,6 @@ import numpy as np
 from .points import Vector, Point3D, Point, Points
 from .color import Color
 from .math import dist, sphere_sampling, ray_in_triangle
-from concurrent.futures import ThreadPoolExecutor
 
 class RayCasting:
     def __init__(self, context):
@@ -34,69 +33,31 @@ class SimpleReverseRayCasting(RayCasting):
         # translocate camera to origin.
         mesh.triangles = camera.relocate_world_by_camera(mesh.triangles)
         
-        count = 50000
-        pes_self = self
-        def threadFunc(start): 
-            for index in range(start, start+count):
-                if index % 1000 == 0:
-                    print("working on ray: {}.".format(index))
-
-                ray_samples, xy = camera.sample_vector()
-                start_vector = ray_samples[0]
-                input_xy[index, :] = xy[0]
-
-                # every element of the history is a triple.
-                # 1st element is the ray segment start point before the triangle.
-                # 1st element is the ray segment end point on the triangle.
-                # 2nd element is the index for the triangle in the mesh.
-                ray_history = []
-
-                power = 1
-
-                res_vec, power = pes_self.cast_ray(start_vector, ray_history, mesh, power)
-                while res_vec is not None and res_vec.mode != 'place_holder' and power > 1e-3:
-                    res_vec, power = pes_self.cast_ray(res_vec, ray_history, mesh, power)
-
-                final_color = pes_self.forward_history(ray_history, mesh)
-                if final_color is not None:
-                    #color_data = np.concatenate((final_color.color,
-                    #                            Color.supported_color_space[final_color.mode]))
-                    output_color[index, :] = final_color.color
-
-        Extor = ThreadPoolExecutor(4)
-        Extor.submit(threadFunc, 0)
-        Extor.submit(threadFunc, count)
-        Extor.submit(threadFunc, count*2)
-        Extor.submit(threadFunc, count*3)
-        Extor.shutdown()
-
-
-        
-        # for index in range(self.context.raycasting_iteration):
-        #     if index % 1000 == 0:
-        #         print("working on ray: {}.".format(index))
+        for index in range(self.context.raycasting_iteration):
+            if index % 1000 == 0:
+                print("working on ray: {}.".format(index))
             
-        #     ray_samples, xy = camera.sample_vector()
-        #     start_vector = ray_samples[0]
-        #     input_xy[index, :] = xy[0]
+            ray_samples, xy = camera.sample_vector()
+            start_vector = ray_samples[0]
+            input_xy[index, :] = xy[0]
             
-        #     # every element of the history is a triple.
-        #     # 1st element is the ray segment start point before the triangle.
-        #     # 1st element is the ray segment end point on the triangle.
-        #     # 2nd element is the index for the triangle in the mesh.
-        #     ray_history = []
+            # every element of the history is a triple.
+            # 1st element is the ray segment start point before the triangle.
+            # 1st element is the ray segment end point on the triangle.
+            # 2nd element is the index for the triangle in the mesh.
+            ray_history = []
 
-        #     power = 1
+            power = 1
 
-        #     res_vec, power = self.cast_ray(start_vector, ray_history, mesh, power)
-        #     while res_vec is not None and res_vec.mode != 'place_holder' and power > 1e-3:
-        #         res_vec, power = self.cast_ray(res_vec, ray_history, mesh, power)
+            res_vec, power = self.cast_ray(start_vector, ray_history, mesh, power)
+            while res_vec is not None and res_vec.mode != 'place_holder' and power > 1e-3:
+                res_vec, power = self.cast_ray(res_vec, ray_history, mesh, power)
 
-        #     final_color = self.forward_history(ray_history, mesh)
-        #     if final_color is not None:
-        #         #color_data = np.concatenate((final_color.color,
-        #         #                            Color.supported_color_space[final_color.mode]))
-        #         output_color[index, :] = final_color.color
+            final_color = self.forward_history(ray_history, mesh)
+            if final_color is not None:
+                #color_data = np.concatenate((final_color.color,
+                #                            Color.supported_color_space[final_color.mode]))
+                output_color[index, :] = final_color.color
 
         return (input_xy, output_color)
             
