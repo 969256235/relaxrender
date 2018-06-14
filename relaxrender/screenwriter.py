@@ -1,6 +1,7 @@
 import numpy as np
 import imageio
 
+GAMMA = 2.2
 class NormalizedWriter:
     def __init__(self, context):
         self.ctx = context
@@ -53,9 +54,13 @@ class NormalizedWriter:
                 
                 res_color = np.mean(sort_color[step_index:end_step_index, :], axis=0)
                 
-                img[i, j, 0] = res_color[0]
-                img[i, j, 1] = res_color[1]
-                img[i, j, 2] = res_color[2]
+                # img[i, j, 0] = res_color[0]
+                # img[i, j, 1] = res_color[1]
+                # img[i, j, 2] = res_color[2]
+                img[i, j, 0] = res_color[0]**(1/GAMMA)
+                img[i, j, 1] = res_color[1]**(1/GAMMA)
+                img[i, j, 2] = res_color[2]**(1/GAMMA)
+
 
                 step_index = end_step_index
 
