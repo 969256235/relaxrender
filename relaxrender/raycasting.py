@@ -40,7 +40,20 @@ class SimpleReverseRayCasting(RayCasting):
             ray_samples, xy = camera.sample_vector()
             start_vector = ray_samples[0]
             input_xy[index, :] = xy[0]
-            
+
+            # l = (75, 204)
+            # x = xy[0][0]
+            # y = xy[0][1]
+            # l_l = l[0] / 800
+            # l_r = (l[0] + 80) / 800
+            # l_t = l[1] / 600
+            # l_b = (l[1] + 60) / 600
+            # l_l = l_l*2-1
+            # l_r = l_r*2-1
+            # l_t = l_t*2-1
+            # l_b = l_b*2-1
+            # if x < l_l or x > l_r or y < l_t or y > l_b:
+            #     continue
             # every element of the history is a triple.
             # 1st element is the ray segment start point before the triangle.
             # 1st element is the ray segment end point on the triangle.

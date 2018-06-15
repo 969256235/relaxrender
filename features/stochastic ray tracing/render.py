@@ -40,6 +40,19 @@ def make_cornell_box():
     tex_pos.append(None)
     tex_pos.append(None)
 
+    # add ceilling, wall, floor
+    # ceiling
+    tris.append_rct(np.array([1, 1, 0]),
+                    np.array([-1, 1, 0]),
+                    np.array([-1, 1, -2]),
+                    np.array([1, 1, -2]))
+
+    texs.append(UniformReflection(Grey))
+    texs.append(UniformReflection(Grey))
+
+    tex_pos.append(None)
+    tex_pos.append(None)
+
     # left wall
     tris.append_rct(np.array([-1, 1, 0]),
                     np.array([-1, -1, 0]),
@@ -48,6 +61,42 @@ def make_cornell_box():
 
     texs.append(UniformReflection(Red))
     texs.append(UniformReflection(Red))
+
+    tex_pos.append(None)
+    tex_pos.append(None)
+
+    # right wall
+    tris.append_rct(np.array([1, 1, 0]),
+                    np.array([1, 1, -2]),
+                    np.array([1, -1, -2]),
+                    np.array([1, -1, 0]))
+
+    texs.append(UniformReflection(Green))
+    texs.append(UniformReflection(Green))
+
+    tex_pos.append(None)
+    tex_pos.append(None)
+
+    # floor
+    tris.append_rct(np.array([-1, -1, 0]),
+                    np.array([1, -1, 0]),
+                    np.array([1, -1, -2]),
+                    np.array([-1, -1, -2]))
+
+    texs.append(UniformReflection(Grey))
+    texs.append(UniformReflection(Grey))
+
+    tex_pos.append(None)
+    tex_pos.append(None)
+
+    # back
+    tris.append_rct(np.array([1, 1, -2]),
+                    np.array([-1, 1, -2]),
+                    np.array([-1, -1, -2]),
+                    np.array([1, -1, -2]))
+
+    texs.append(UniformReflection(Grey))
+    texs.append(UniformReflection(Grey))
 
     tex_pos.append(None)
     tex_pos.append(None)
@@ -63,6 +112,7 @@ def make_cornell_box():
 
     tex_pos.append(None)
     tex_pos.append(None)
+    
 
     mesh = Mesh(tris, texs, tex_pos)
     
@@ -77,6 +127,7 @@ def make_cornell_box():
 
 cornell_box = make_cornell_box()
 
+
 class TestRelaxRender(unittest.TestCase):
 
     def test_simple_render(self):
@@ -85,6 +136,8 @@ class TestRelaxRender(unittest.TestCase):
         
         myContext = ctx.Context()
         myContext.raycasting_iteration = int(1e7)
+        myContext.output_height = 600
+        myContext.output_width = 800
         render = raycasting.SimpleReverseRayCasting(myContext)
         input_xy, output_color = render.drive_raycasting(scene)
         
@@ -95,3 +148,4 @@ class TestRelaxRender(unittest.TestCase):
 if __name__ == "__main__":
     test = TestRelaxRender()
     test.test_simple_render()
+
