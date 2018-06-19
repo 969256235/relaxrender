@@ -107,39 +107,8 @@ class SimpleReverseRayCasting(RayCasting):
             
 
     def forward_history(self, history, mesh):
-        target_point = history[0][1]
-        tris = []
-        for i in range(len(history)):
-            if mesh.textures[i].damping_rate() < 1e-3:
-                tris.append(mesh.triangles[i]);
-            
-        ray_sum_sqrt = 3
-        ray_hit = 0
-        p1 = tris[0].p1
-        p2 = tris[0].p2
-        p3 = tris[0].p3
-
-        intver = 1/ray_sum_sqrt;
-        for i in range(ray_sum_sqrt):
-            for j in range(ray_sum_sqrt):
-                tx = i*intver + intver * np.random.random()
-                px = Point3D(p1.data[0]*(1-tx) + p2.data[0]*tx, p1.data[1]*(1-tx)+p2.data[1]*tx, p1.data[2]*(1-tx)+p2.data[2]*tx)
-                ty = j*intver + intver * np.random.random()
-                py = Point3D(p3.data[0]*(1-tx) + p2.data[0]*tx, p3.data[1]*(1-tx)+p2.data[1]*tx, p3.data[2]*(1-tx)+p2.data[2]*tx)
-                pt = Point3D(p2.data[0]+px.data[0]+py.data[0], p2.data[1]+px.data[1]+py.data[1], p2.data[2]+px.data[2]+py.data[2])
-                ra = Vector(target_point, pt)
-
-                hit = False;
-                for tri in range(mesh.triangles.size()):
-                    triangle = mesh.triangles[tri]
-                    result_ipoint = ray_in_triangle(ra, triangle)
-                    if result_ipoint is not None:
-                        hit = True
-                        break
-
-                if not hit:
-                    ray_hit += 1
-                
+        if(len(history) > 0):
+            target_point = history[0][1]
 
         color = None
         while len(history) > 0:
@@ -150,7 +119,59 @@ class SimpleReverseRayCasting(RayCasting):
         if color is None:
             return color
         else:
-            return color*ray_hit/ray_sum_sqrt**2
+            shadow = self.get_shadow(target_point, mesh)
+            return color*Color('RGB', shadow, shadow, shadow, 1)
+
+    def get_shadow(self, from_point, mesh):
+        tris = []
+        for i in range(len(mesh.textures)):
+            if mesh.textures[i].damping_rate() < 1e-3:
+                tris.append(mesh.triangles[i]);
+
+        ray_sum_sqrt = 3
+        ray_hit = 0
+        p1 = tris[0].p1
+        p2 = tris[0].p2
+        p3 = tris[0].p3
+        # make p2 be right-angle point
+        if np.dot(p1.data-p2.data,p3.data-p2.data) > 1e-3:
+            if np.dot(p2.data-p1.data,p3.data-p1.data) < 1e-3:
+                tmp = p2
+                p2 = p1
+                p1 = tmp
+            else:
+                tmp = p2
+                p2 = p3
+                p3 = tmp
+
+        interval = 1/ray_sum_sqrt;
+        for i in range(ray_sum_sqrt):
+            for j in range(ray_sum_sqrt):
+                tx = i*interval + interval * np.random.random()
+                px = Point3D(p1.data[0]*(1-tx) + p2.data[0]*tx, p1.data[1]*(1-tx)+p2.data[1]*tx, p1.data[2]*(1-tx)+p2.data[2]*tx)
+                ty = j*interval + interval * np.random.random()
+                py = Point3D(p3.data[0]*(1-tx) + p2.data[0]*tx, p3.data[1]*(1-tx)+p2.data[1]*tx, p3.data[2]*(1-tx)+p2.data[2]*tx)
+                light_target = Point3D((p2.data[0]+px.data[0]+py.data[0])/3, (p2.data[1]+px.data[1]+py.data[1])/3, (p2.data[2]+px.data[2]+py.data[2])/3)
+                shadow_ray = Vector(from_point, light_target)
+
+                p3d = from_point
+                nearest_dist = None
+                nearest_ipoint = None
+                nearest_triangle = None
+                for tri in range(mesh.triangles.size()):
+                    result_ipoint = ray_in_triangle(shadow_ray, mesh.triangles[tri])
+                    if result_ipoint is not None:
+                        ppdist = dist(p3d, result_ipoint)
+                        if nearest_dist is None or ppdist < nearest_dist:
+                            nearest_dist = ppdist
+                            nearest_triangle = tri
+                            nearest_ipoint = result_ipoint
+                if nearest_ipoint is None or dist(nearest_ipoint, light_target) < 1e-3:
+                    ray_hit += 1
+
+        return ray_hit/ray_sum_sqrt**2
+
+
 
             
         
