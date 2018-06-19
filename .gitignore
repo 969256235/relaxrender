@@ -25,3 +25,5 @@ build
 .coverage
 .pytest_cache/
 htmlcov/
+output*.jpg
+.vscode/*
