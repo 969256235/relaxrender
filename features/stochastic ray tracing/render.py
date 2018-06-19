@@ -42,10 +42,10 @@ def make_cornell_box():
 
     # add ceilling, wall, floor
     # ceiling
-    tris.append_rct(np.array([1, 1, 0]),
-                    np.array([-1, 1, 0]),
+    tris.append_rct(np.array([ 1, 1,  0]),
+                    np.array([-1, 1,  0]),
                     np.array([-1, 1, -2]),
-                    np.array([1, 1, -2]))
+                    np.array([ 1, 1, -2]))
 
     texs.append(UniformReflection(Grey))
     texs.append(UniformReflection(Grey))
@@ -135,7 +135,7 @@ class TestRelaxRender(unittest.TestCase):
         scene = cornell_box
         
         myContext = ctx.Context()
-        myContext.raycasting_iteration = int(1e7)
+        myContext.raycasting_iteration = int(1e8)
         myContext.output_height = 600
         myContext.output_width = 800
         render = raycasting.SimpleReverseRayCasting(myContext)

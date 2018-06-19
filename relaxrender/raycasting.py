@@ -34,20 +34,20 @@ class SimpleReverseRayCasting(RayCasting):
         mesh.triangles = camera.relocate_world_by_camera(mesh.triangles)
         
         for index in range(self.context.raycasting_iteration):
-            if index % 1000 == 0:
+            if index % 100000 == 0:
                 print("working on ray: {}.".format(index))
             
             ray_samples, xy = camera.sample_vector()
             start_vector = ray_samples[0]
             input_xy[index, :] = xy[0]
 
-            # l = (75, 204)
+            # l = (75, 290)
             # x = xy[0][0]
             # y = xy[0][1]
             # l_l = l[0] / 800
             # l_r = (l[0] + 80) / 800
             # l_t = l[1] / 600
-            # l_b = (l[1] + 60) / 600
+            # l_b = (l[1] + 130) / 600
             # l_l = l_l*2-1
             # l_r = l_r*2-1
             # l_t = l_t*2-1
@@ -61,7 +61,10 @@ class SimpleReverseRayCasting(RayCasting):
             ray_history = []
 
             power = 1
-
+            if xy[0][0]>0.5 and xy[0][1]>0.5:
+                bk = int(0)
+                start_vector.end.data[0] = 0.5
+                start_vector.end.data[1] = 0.5
             res_vec, power = self.cast_ray(start_vector, ray_history, mesh, power)
             while res_vec is not None and res_vec.mode != 'place_holder' and power > 1e-3:
                 res_vec, power = self.cast_ray(res_vec, ray_history, mesh, power)
@@ -104,13 +107,50 @@ class SimpleReverseRayCasting(RayCasting):
             
 
     def forward_history(self, history, mesh):
+        target_point = history[0][1]
+        tris = []
+        for i in range(len(history)):
+            if mesh.textures[i].damping_rate() < 1e-3:
+                tris.append(mesh.triangles[i]);
+            
+        ray_sum_sqrt = 3
+        ray_hit = 0
+        p1 = tris[0].p1
+        p2 = tris[0].p2
+        p3 = tris[0].p3
+
+        intver = 1/ray_sum_sqrt;
+        for i in range(ray_sum_sqrt):
+            for j in range(ray_sum_sqrt):
+                tx = i*intver + intver * np.random.random()
+                px = Point3D(p1.data[0]*(1-tx) + p2.data[0]*tx, p1.data[1]*(1-tx)+p2.data[1]*tx, p1.data[2]*(1-tx)+p2.data[2]*tx)
+                ty = j*intver + intver * np.random.random()
+                py = Point3D(p3.data[0]*(1-tx) + p2.data[0]*tx, p3.data[1]*(1-tx)+p2.data[1]*tx, p3.data[2]*(1-tx)+p2.data[2]*tx)
+                pt = Point3D(p2.data[0]+px.data[0]+py.data[0], p2.data[1]+px.data[1]+py.data[1], p2.data[2]+px.data[2]+py.data[2])
+                ra = Vector(target_point, pt)
+
+                hit = False;
+                for tri in range(mesh.triangles.size()):
+                    triangle = mesh.triangles[tri]
+                    result_ipoint = ray_in_triangle(ra, triangle)
+                    if result_ipoint is not None:
+                        hit = True
+                        break
+
+                if not hit:
+                    ray_hit += 1
+                
+
         color = None
         while len(history) > 0:
             (p_start, p_end, tri) = history.pop()
             ttex = mesh.textures[tri]
             ttex_pos = mesh.texture_pos[tri]
             color = ttex.get_color(color, 0, 0, 0, 0, None, None)
-        return color
+        if color is None:
+            return color
+        else:
+            return color*ray_hit/ray_sum_sqrt**2
 
             
         
